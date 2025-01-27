@@ -2,6 +2,7 @@ import { GithubRepoLoader } from "@langchain/community/document_loaders/web/gith
 import { vectorStore } from "./vectorStore";
 import { connectToDatabase } from "./pincoin";
 import axios from "axios";
+import { Document } from "langchain/document"; // Import Document type
 
 // Define a type for the GitHub branch API response
 interface GitHubBranch {
@@ -22,12 +23,12 @@ const fetchAllBranches = async (repoUrl: string): Promise<string[]> => {
   }
 };
 
-export const gitHubUrlToDocs = async (url: string) => {
+export const gitHubUrlToDocs = async (url: string): Promise<void> => {
   const branches = await fetchAllBranches(url);
 
   if (branches.length === 0) {
     console.warn("No branches found for the repository.");
-    return [];
+    return;
   }
 
   await connectToDatabase();
@@ -36,16 +37,14 @@ export const gitHubUrlToDocs = async (url: string) => {
     const loader = new GithubRepoLoader(url, {
       branch: branch,
       recursive: false,
-      unknown: "warn",
+      unknown: "warn" as "warn", // Ensure correct type
       maxConcurrency: 5,
     });
 
-    const docs = await loader.load();
+    const docs: Document[] = await loader.load(); // Explicitly define docs type
     await vectorStore.addDocuments(docs);
     console.log(`Processed ${docs.length} documents from branch: ${branch}`);
   }
-
-  return; // You can return something meaningful if needed
 };
 
 export default gitHubUrlToDocs;
