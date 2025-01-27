@@ -1,7 +1,12 @@
 import { GithubRepoLoader } from "@langchain/community/document_loaders/web/github";
 import { vectorStore } from "./vectorStore";
 import { connectToDatabase } from "./pincoin";
-import axios from "axios"; // You'll need axios to fetch branches from GitHub
+import axios from "axios";
+
+// Define a type for the GitHub branch API response
+interface GitHubBranch {
+  name: string;
+}
 
 // Function to fetch all branches from a GitHub repository
 const fetchAllBranches = async (repoUrl: string): Promise<string[]> => {
@@ -9,8 +14,8 @@ const fetchAllBranches = async (repoUrl: string): Promise<string[]> => {
   const apiUrl = `https://api.github.com/repos/${repoPath}/branches`;
 
   try {
-    const response = await axios.get(apiUrl);
-    return response.data.map((branch: any) => branch.name);
+    const response = await axios.get<GitHubBranch[]>(apiUrl);
+    return response.data.map((branch) => branch.name);
   } catch (error) {
     console.error("Error fetching branches:", error);
     return [];
