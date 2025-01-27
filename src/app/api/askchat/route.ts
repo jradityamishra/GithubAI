@@ -4,11 +4,8 @@ import admin from "firebase-admin";
 import { Message } from "@/type";
 import { adminDB } from "@/firabaseAdmin";
 import extractGitHubURL from "@/lib/github";
-import axios from "axios";
-import { generateGeminiPrompt } from "@/lib/gitdetails";
-import {vectorStore} from "@/lib/vectorStore";
-import  gitHubUrlToDocs from "@/lib/githubDocs";
-import  retrieveRelevantDocs  from "@/lib/retriveData";
+import gitHubUrlToDocs from "@/lib/githubDocs";
+import retrieveRelevantDocs from "@/lib/retriveData";
 import { PromptTemplate } from "@langchain/core/prompts";
 
 const promptData = PromptTemplate.fromTemplate(
@@ -33,7 +30,7 @@ const promptData = PromptTemplate.fromTemplate(
 
 export const POST = async (req: NextRequest) => {
   const reqBody = await req.json();
-  const { prompt, id, model, session } = reqBody;
+  const { prompt, id, session } = reqBody;
 
   // Input validation
   if (!prompt) {
@@ -49,21 +46,21 @@ export const POST = async (req: NextRequest) => {
     );
   }
 
-// Use the vector store as a retriever that returns a single document
+  // Use the vector store as a retriever that returns a single document
 
 
   // Extract GitHub URL (if present)
-  const url=extractGitHubURL(prompt);
-  if(url){
-    const docs=await gitHubUrlToDocs(url);
-      if(docs){
-        console.log("GitHub repo data stored successfully in vector store!");
-      }
+  const url = extractGitHubURL(prompt);
+  if (url) {
+    const docs = await gitHubUrlToDocs(url);
+    if (docs) {
+      console.log("GitHub repo data stored successfully in vector store!");
+    }
   }
-  
- const p=await retrieveRelevantDocs(prompt);
 
- let chatHistory = "";
+  const p = await retrieveRelevantDocs(prompt);
+
+  let chatHistory = "";
   try {
     const messagesSnapshot = await adminDB
       .collection("users")
@@ -90,19 +87,19 @@ export const POST = async (req: NextRequest) => {
     );
   }
 
-  const Formattedprompt=await promptData.format({
-    hostory:chatHistory,
-    question:prompt,
-    context:p
+  const Formattedprompt = await promptData.format({
+    hostory: chatHistory,
+    question: prompt,
+    context: p
   })
 
 
-  
-  const responseText = await query(Formattedprompt, id, model);
 
+  const responseText = await query(Formattedprompt);
+  const messageText = Array.isArray(responseText) ? responseText.join(', ') : responseText;
   // Construct message object
   const message: Message = {
-    text: responseText || "GithubAI was unable to find an answer for that!",
+    text: messageText || "GithubAI was unable to find an answer for that!",
     createdAt: admin.firestore.Timestamp.now(),
     user: {
       _id: "GithubAI",
@@ -130,7 +127,7 @@ export const POST = async (req: NextRequest) => {
       { status: 200 }
     );
   } catch (error) {
-    const e=error as Error
+    const e = error as Error
     console.error("Error saving message to Firebase:", error);
     return NextResponse.json({ error: e.message }, { status: 500 });
   }

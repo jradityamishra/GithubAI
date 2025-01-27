@@ -1,4 +1,4 @@
-import openai from "@/src/lib/GithubAi";
+
 import { NextResponse } from "next/server";
 const availableModels = [
   { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro" },

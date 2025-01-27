@@ -1,5 +1,4 @@
 import ChatInput from "@/src/components/ChatInput";
-import ChatHelp from "@/src/components/ChatHelp";
 
 export default function Home() {
   return (
