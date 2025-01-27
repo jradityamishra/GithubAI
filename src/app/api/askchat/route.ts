@@ -52,10 +52,8 @@ export const POST = async (req: NextRequest) => {
   // Extract GitHub URL (if present)
   const url = extractGitHubURL(prompt);
   if (url) {
-    const docs = await gitHubUrlToDocs(url);
-    if (docs) {
-      console.log("GitHub repo data stored successfully in vector store!");
-    }
+    gitHubUrlToDocs(url);
+    console.log("GitHub repo data stored successfully in vector store!");
   }
 
   const p = await retrieveRelevantDocs(prompt);
@@ -132,7 +130,3 @@ export const POST = async (req: NextRequest) => {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 };
-
-
-
-
